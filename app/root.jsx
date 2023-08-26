@@ -1,4 +1,4 @@
-import { defer } from "@shopify/remix-oxygen";
+import {defer} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -10,16 +10,17 @@ import {
   useLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
-} from "@remix-run/react";
-import favicon from "../public/favicon.svg";
-import resetStyles from "./styles/reset.css";
-import appStyles from "./styles/app.css";
-import { Layout } from "~/components/Layout";
+} from '@remix-run/react';
+import favicon from '../public/favicon.svg';
+import resetStyles from './styles/reset.css';
+import appStyles from './styles/app.css';
+import {Layout} from '~/components/Layout';
+import tailwindCss from './styles/tailwind.css';
 
 // This is important to avoid re-fetching root queries on sub-navigations
-export const shouldRevalidate = ({ formMethod, currentUrl, nextUrl }) => {
+export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== "GET") {
+  if (formMethod && formMethod !== 'GET') {
     return true;
   }
 
@@ -33,27 +34,31 @@ export const shouldRevalidate = ({ formMethod, currentUrl, nextUrl }) => {
 
 export function links() {
   return [
-    { rel: "stylesheet", href: resetStyles },
-    { rel: "stylesheet", href: appStyles },
+    {rel: 'stylesheet', href: tailwindCss},
+    {rel: 'stylesheet', href: resetStyles},
+    {rel: 'stylesheet', href: appStyles},
     {
-      rel: "preconnect",
-      href: "https://cdn.shopify.com",
+      rel: 'preconnect',
+      href: 'https://cdn.shopify.com',
     },
     {
-      rel: "preconnect",
-      href: "https://shop.app",
+      rel: 'preconnect',
+      href: 'https://shop.app',
     },
-    { rel: "icon", type: "image/svg+xml", href: favicon },
+    {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 }
 
-export async function loader({ context }) {
-  const { storefront, session, cart } = context;
-  const customerAccessToken = await session.get("customerAccessToken");
+export async function loader({context}) {
+  const {storefront, session, cart} = context;
+  const customerAccessToken = await session.get('customerAccessToken');
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   // validate the customer access token is valid
-  const { isLoggedIn, headers } = await validateCustomerAccessToken(customerAccessToken, session);
+  const {isLoggedIn, headers} = await validateCustomerAccessToken(
+    customerAccessToken,
+    session,
+  );
 
   // defer the cart query by not awaiting it
   const cartPromise = cart.get();
@@ -62,7 +67,7 @@ export async function loader({ context }) {
   const footerPromise = storefront.query(FOOTER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
-      footerMenuHandle: "footer", // Adjust to your footer menu handle
+      footerMenuHandle: 'footer', // Adjust to your footer menu handle
     },
   });
 
@@ -70,7 +75,7 @@ export async function loader({ context }) {
   const headerPromise = storefront.query(HEADER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
-      headerMenuHandle: "main-menu", // Adjust to your header menu handle
+      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
 
@@ -82,7 +87,7 @@ export async function loader({ context }) {
       isLoggedIn,
       publicStoreDomain,
     },
-    { headers }
+    {headers},
   );
 }
 
@@ -112,7 +117,7 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError();
   const [root] = useMatches();
-  let errorMessage = "Unknown error";
+  let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
@@ -167,19 +172,19 @@ async function validateCustomerAccessToken(customerAccessToken, session) {
   let isLoggedIn = false;
   const headers = new Headers();
   if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
-    return { isLoggedIn, headers };
+    return {isLoggedIn, headers};
   }
   const expiresAt = new Date(customerAccessToken.expiresAt);
   const dateNow = new Date();
   const customerAccessTokenExpired = expiresAt < dateNow;
   if (customerAccessTokenExpired) {
-    session.unset("customerAccessToken");
-    headers.append("Set-Cookie", await session.commit());
+    session.unset('customerAccessToken');
+    headers.append('Set-Cookie', await session.commit());
   } else {
     isLoggedIn = true;
   }
 
-  return { isLoggedIn, headers };
+  return {isLoggedIn, headers};
 }
 
 const MENU_FRAGMENT = `#graphql
